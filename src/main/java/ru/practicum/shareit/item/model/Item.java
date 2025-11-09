@@ -6,12 +6,8 @@ import jakarta.validation.constraints.Positive;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
-/**
- * TODO Sprint add-controllers.
- */
 @Data
 @Builder
 @EqualsAndHashCode(of = "id")
