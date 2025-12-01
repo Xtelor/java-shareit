@@ -2,10 +2,11 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.ConflictException;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.user.UserMapper;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
@@ -15,24 +16,27 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
     // Создание пользователя
     @Override
+    @Transactional
     public UserDto addUser(UserDto dto) {
         // Проверка уникальности электронной почты
         validateEmail(dto.getEmail());
 
         User user = UserMapper.mapToUser(dto);
-        User createdUser = userStorage.addUser(user);
+        User createdUser = userRepository.save(user);
+
         return UserMapper.mapToUserDto(createdUser);
     }
 
     // Получение списка всех пользователей
     @Override
     public List<UserDto> getAllUsers() {
-        return userStorage.getUsers().stream()
+        return userRepository.findAll().stream()
                 .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toList());
     }
@@ -46,59 +50,49 @@ public class UserServiceImpl implements UserService {
 
     // Обновление пользователя
     @Override
+    @Transactional
     public UserDto updateUser(Long id, UserDto dto) {
         User existingUser = findUserById(id);
 
-        // Обновляем имя, если оно передано
-        if (dto.getName() != null && !dto.getName().isBlank()) {
-            existingUser.setName(dto.getName());
-        }
-
-        // Обновляем email, если он передан/ещё не используется
+        // Валидация электронной почты
         if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
-            String newEmail = dto.getEmail();
-            if (!newEmail.equalsIgnoreCase(existingUser.getEmail())) {
-                // Проверка уникальности электронной почты
-                validateEmail(newEmail);
-                existingUser.setEmail(newEmail);
+            if (!Objects.equals(existingUser.getEmail(), dto.getEmail())) {
+                validateEmail(dto.getEmail());
             }
         }
 
-        userStorage.updateUser(existingUser);
+        UserMapper.updateUserFromDto(dto, existingUser);
+        existingUser = userRepository.save(existingUser);
+
         return UserMapper.mapToUserDto(existingUser);
     }
 
     // Удаление пользователя по ID
     @Override
+    @Transactional
     public void deleteUser(Long id) {
         // Проверка существования пользователя
         findUserById(id);
-        userStorage.deleteUser(id);
+        userRepository.deleteById(id);
     }
 
     // Удаление всех пользователей
     @Override
+    @Transactional
     public void deleteAllUsers() {
-        userStorage.deleteUsers();
+        userRepository.deleteAllInBatch();
     }
 
     // Метод для проверки доступности электронной почты
     private void validateEmail(String email) {
-        if (userStorage.getUsers().stream()
-                .anyMatch(usr -> Objects.equals(usr.getEmail(), email))
-        ) {
+        if (userRepository.existsByEmail(email)) {
             throw new ConflictException("Эта электронная почта уже используется.");
         }
     }
 
     // Проверка пользователя на существование - возвращает пользователя, если он существует
     private User findUserById(Long id) {
-        User user = userStorage.getUser(id);
-
-        if (user == null) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден.");
-        }
-
-        return user;
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден."));
     }
 }

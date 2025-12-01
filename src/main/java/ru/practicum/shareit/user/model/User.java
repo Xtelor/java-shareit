@@ -1,27 +1,26 @@
 package ru.practicum.shareit.user.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.persistence.*;
 import lombok.*;
 
+@Entity
+@Table(name = "users")
 @Data
 @Builder
-@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class User {
     // ID пользователя
-    @NotNull(message = "ID не может быть пустым.")
-    @Positive(message = "ID не может быть отрицательным.")
-    @Builder.Default
-    private Long id = 0L;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     // Имя пользователя
-    @NotBlank(message = "Имя пользователя не может быть пустым.")
+    @Column(name = "name", nullable = false)
     private String name;
+
     // Электронная почта пользователя
-    @NotBlank(message = "Электронная почта не может быть пустой.")
-    @Email(message = "Некорректная электронная почта.")
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 }
