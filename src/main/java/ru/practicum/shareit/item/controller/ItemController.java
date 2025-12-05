@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.HttpHeaders;
 import ru.practicum.shareit.item.service.ItemService;
@@ -13,17 +14,19 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/items")
+@Validated
 public class ItemController {
     private final ItemService itemService;
 
     @GetMapping
-    public List<ItemDto> getItemsByOwner(@RequestHeader(HttpHeaders.USER_ID) Long ownerId) {
+    public List<ItemWithBookingsDto> getItemsByOwner(@RequestHeader(HttpHeaders.USER_ID) @Positive Long ownerId) {
         return itemService.getItemsByOwner(ownerId);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable @Positive Long itemId) {
-        return itemService.getItemById(itemId);
+    public ItemWithBookingsDto getItemById(@RequestHeader(HttpHeaders.USER_ID) @Positive Long userId,
+                               @PathVariable @Positive Long itemId) {
+        return itemService.getItemByIdWithBookings(userId, itemId);
     }
 
     @GetMapping("/search")
@@ -42,6 +45,14 @@ public class ItemController {
                               @RequestBody ItemDto dto,
                               @RequestHeader(HttpHeaders.USER_ID) @Positive Long ownerId) {
         return itemService.updateItem(itemId, dto, ownerId);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentResponseDto addComment(
+            @RequestHeader(HttpHeaders.USER_ID) @Positive Long userId,
+            @PathVariable Long itemId,
+            @Valid @RequestBody CommentRequestDto dto) {
+        return itemService.addComment(userId, itemId, dto);
     }
 
     @DeleteMapping

@@ -1,32 +1,37 @@
 package ru.practicum.shareit.item.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import jakarta.persistence.*;
+import lombok.*;
 import ru.practicum.shareit.user.model.User;
 
+@Entity
+@Table(name = "items")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(of = "id")
 public class Item {
     // ID вещи
-    @NotNull(message = "ID вещи не может быть пустым.")
-    @Positive(message = "ID вещи не может быть отрицательным.")
-    @Builder.Default
-    private Long id = 0L;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     // Название вещи
-    @NotBlank(message = "Название вещи не может быть пустым.")
+    @Column(name = "name", nullable = false)
     private String name;
+
     // Описание вещи
-    @NotBlank(message = "Описание вещи не может быть пустым.")
+    @Column(name = "description", nullable = false)
     private String description;
+
     // Статус вещи(доступна/недоступна)
-    @NotBlank(message = "Статус вещи должен быть указан.")
+    @Column(name = "available", nullable = false)
     private Boolean available;
+
     // Владелец вещи
-    @NotBlank(message = "У вещи должен быть владелец.")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    @ToString.Exclude
     private User owner;
 }

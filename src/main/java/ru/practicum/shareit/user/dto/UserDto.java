@@ -10,11 +10,13 @@ import lombok.Data;
 public class UserDto {
     // ID пользователя
     private Long id;
+
     // Имя пользователя
     @NotBlank(message = "Имя пользователя не может быть пустым.")
     private String name;
+
+    // Электронная почта пользователя
     @NotBlank(message = "Электронная почта не может быть пустой.")
     @Email(message = "Некорректная электронная почта.")
-    // Электронная почта пользователя
     private String email;
 }
