@@ -38,6 +38,7 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private final ItemRequestRepository itemRequestRepository;
+
     // Добавление вещи
     @Override
     @Transactional

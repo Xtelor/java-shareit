@@ -14,8 +14,6 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.service.BookingService;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -38,8 +36,8 @@ class BookingControllerTest {
     void shouldCreateBooking() throws Exception {
         BookingRequestDto request = BookingRequestDto.builder()
                 .itemId(1L)
-                .start(LocalDateTime.now().plus(24, ChronoUnit.HOURS))
-                .end(LocalDateTime.now().plus(48, ChronoUnit.HOURS))
+                .start(LocalDateTime.now().plusHours(24))
+                .end(LocalDateTime.now().plusHours(48))
                 .build();
 
         BookingResponseDto response = BookingResponseDto.builder()
