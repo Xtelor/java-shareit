@@ -31,11 +31,9 @@ class CommentRequestDtoJsonTest {
     // Тест корректной десериализации JSON в DTO
     @Test
     void shouldDeserializeCorrectly() throws Exception {
-        String content = """
-                {
-                    "text": "Всё работает, спасибо!"
-                }
-                """;
+        String content = "{" +
+                "\"text\": \"Всё работает, спасибо!\"" +
+                "}";
 
         CommentRequestDto dto = json.parseObject(content);
 
@@ -45,11 +43,9 @@ class CommentRequestDtoJsonTest {
     // Тест на пустой текст — валидация сработает при @Valid в контроллере
     @Test
     void shouldAllowEmptyTextInJson() throws Exception {
-        String content = """
-                {
-                    "text": ""
-                }
-                """;
+        String content = "{" +
+                "\"text\": \"\"" +
+                "}";
 
         CommentRequestDto dto = json.parseObject(content);
         assertThat(dto.getText()).isEmpty();

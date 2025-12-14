@@ -37,13 +37,11 @@ class BookItemRequestDtoJsonTest {
     // Тест корректной десериализации JSON в DTO
     @Test
     void shouldDeserializeCorrectly() throws Exception {
-        String content = """
-                {
-                    "itemId": 99,
-                    "start": "2025-12-31T10:00:00",
-                    "end": "2026-01-05T10:00:00"
-                }
-                """;
+        String content = "{" +
+                "\"itemId\": 99," +
+                "\"start\": \"2025-12-31T10:00:00\"," +
+                "\"end\": \"2026-01-05T10:00:00\"" +
+                "}";
 
         BookItemRequestDto dto = json.parseObject(content);
 

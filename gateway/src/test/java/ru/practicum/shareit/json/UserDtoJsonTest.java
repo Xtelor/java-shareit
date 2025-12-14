@@ -35,12 +35,10 @@ class UserDtoJsonTest {
     // Тест корректной десериализации JSON в DTO
     @Test
     void shouldDeserializeCorrectly() throws Exception {
-        String content = """
-                {
-                    "name": "Мария",
-                    "email": "maria@gmail.com"
-                }
-                """;
+        String content = "{" +
+                "\"name\": \"Мария\"," +
+                "\"email\": \"maria@gmail.com\"" +
+                "}";
 
         UserDto dto = json.parseObject(content);
 
@@ -52,12 +50,10 @@ class UserDtoJsonTest {
     // Тест на некорректный email — валидация @Email сработает при @Valid
     @Test
     void shouldAllowInvalidEmailInJson() throws Exception {
-        String content = """
-                {
-                    "name": "Пётр",
-                    "email": "неправильный_емейл"
-                }
-                """;
+        String content = "{" +
+                "\"name\": \"Пётр\"," +
+                "\"email\": \"неправильный_емейл\"" +
+                "}";
 
         UserDto dto = json.parseObject(content);
         assertThat(dto.getEmail()).isEqualTo("неправильный_емейл");

@@ -38,5 +38,5 @@ public class ItemDto {
 
     // Комментарии
     @Builder.Default
-    private List<Object> comments = new ArrayList<>();;
+    private List<Object> comments = new ArrayList<>();
 }

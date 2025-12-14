@@ -31,11 +31,9 @@ class ItemRequestCreateDtoJsonTest {
     // Тест корректной десериализации JSON в DTO
     @Test
     void shouldDeserializeCorrectly() throws Exception {
-        String content = """
-                {
-                    "description": "Ищу шуруповёрт с двумя аккумуляторами"
-                }
-                """;
+        String content = "{" +
+                "\"description\": \"Ищу шуруповёрт с двумя аккумуляторами\"" +
+                "}";
 
         ItemRequestCreateDto dto = json.parseObject(content);
 
@@ -46,11 +44,9 @@ class ItemRequestCreateDtoJsonTest {
     // Тест на пустое описание — валидация @NotBlank сработает при @Valid в контроллере
     @Test
     void shouldAllowEmptyDescriptionInJson() throws Exception {
-        String content = """
-                {
-                    "description": ""
-                }
-                """;
+        String content = "{" +
+                "\"description\": \"\"" +
+                "}";
 
         ItemRequestCreateDto dto = json.parseObject(content);
         assertThat(dto.getDescription()).isEmpty();
