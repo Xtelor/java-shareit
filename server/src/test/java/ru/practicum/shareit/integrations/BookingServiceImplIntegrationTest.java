@@ -648,4 +648,72 @@ class BookingServiceImplIntegrationTest {
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Пользователь не найден");
     }
+
+    // getAllByOwner — состояние ALL
+    @Test
+    void getAllByOwner_withStateALL_shouldReturnAllBookings() {
+        UserDto owner = userService.addUser(UserDto.builder()
+                .name("Владелец ALL")
+                .email("owner-all@test.ru")
+                .build());
+
+        UserDto booker = userService.addUser(UserDto.builder()
+                .name("Букер ALL")
+                .email("booker-all@test.ru")
+                .build());
+
+        ItemDto item = itemService.addItem(ItemDto.builder()
+                .name("Вещь ALL")
+                .description("Тест ALL")
+                .available(true)
+                .build(), owner.getId());
+
+        bookingService.create(booker.getId(), BookingRequestDto.builder()
+                .itemId(item.getId())
+                .start(now.plusDays(1))
+                .end(now.plusDays(2))
+                .build());
+
+        bookingService.create(booker.getId(), BookingRequestDto.builder()
+                .itemId(item.getId())
+                .start(now.plusDays(3))
+                .end(now.plusDays(4))
+                .build());
+
+        List<BookingResponseDto> all = bookingService.getAllByOwner(owner.getId(), BookingState.ALL);
+
+        assertThat(all).hasSize(2);
+    }
+
+    // Создание бронирования с одинаковыми датами начала и окончания — ValidationException
+    @Test
+    void create_shouldThrowValidationException_whenStartEqualsEnd() {
+        UserDto owner = userService.addUser(UserDto.builder()
+                .name("Владелец")
+                .email("owner-equal@test.ru")
+                .build());
+
+        UserDto booker = userService.addUser(UserDto.builder()
+                .name("Букер")
+                .email("booker-equal@test.ru")
+                .build());
+
+        ItemDto item = itemService.addItem(ItemDto.builder()
+                .name("Вещь")
+                .description("Тест")
+                .available(true)
+                .build(), owner.getId());
+
+        LocalDateTime same = now.plusDays(1);
+
+        BookingRequestDto requestDto = BookingRequestDto.builder()
+                .itemId(item.getId())
+                .start(same)
+                .end(same)
+                .build();
+
+        assertThatThrownBy(() -> bookingService.create(booker.getId(), requestDto))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Дата окончания должна быть после даты начала");
+    }
 }

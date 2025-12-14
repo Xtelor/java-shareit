@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingItemDto;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exceptions.ForbiddenException;
 import ru.practicum.shareit.exceptions.NotFoundException;
+import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -306,5 +308,105 @@ class ItemServiceImplIntegrationTest {
 
         assertThatThrownBy(() -> itemService.getItemById(item.getId()))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    // Удаление всех вещей - все вещи должны исчезнуть
+    @Test
+    void deleteAllItems_shouldRemoveAllItems() {
+        UserDto owner = userService.addUser(UserDto.builder()
+                .name("Владелец")
+                .email("owner-deleteall@test.ru")
+                .build());
+
+        itemService.addItem(ItemDto.builder()
+                .name("Вещь 1")
+                .description("Первая")
+                .available(true)
+                .build(), owner.getId());
+
+        itemService.addItem(ItemDto.builder()
+                .name("Вещь 2")
+                .description("Вторая")
+                .available(true)
+                .build(), owner.getId());
+
+        itemService.deleteAllItems();
+
+        assertThat(itemService.getItemsByOwner(owner.getId())).isEmpty();
+    }
+
+    // Добавление комментария без завершённого и подтвержденного бронирования
+    @Test
+    void addComment_shouldThrowValidationException_whenNoCompletedApprovedBooking() {
+        UserDto owner = userService.addUser(UserDto.builder()
+                .name("Владелец")
+                .email("owner-nobooking@test.ru")
+                .build());
+
+        UserDto booker = userService.addUser(UserDto.builder()
+                .name("Букер")
+                .email("booker-nobooking@test.ru")
+                .build());
+
+        ItemDto item = itemService.addItem(ItemDto.builder()
+                .name("Вещь без бронирований")
+                .description("Описание")
+                .available(true)
+                .build(), owner.getId());
+
+        CommentRequestDto commentDto = CommentRequestDto.builder()
+                .text("Пытаюсь оставить комментарий без бронирования")
+                .build();
+
+        assertThatThrownBy(() -> itemService.addComment(booker.getId(), item.getId(), commentDto))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Комментарий может оставить только пользователь, завершивший бронирование.");
+    }
+
+    // Проверка выставления для владельца lastBooking и nextBooking
+    @Test
+    void getItemByIdWithBookings_shouldSetLastAndNextBookingsForOwner() {
+        UserDto owner = userService.addUser(UserDto.builder()
+                .name("Владелец")
+                .email("owner-bookings@test.ru")
+                .build());
+
+        UserDto booker = userService.addUser(UserDto.builder()
+                .name("Букер")
+                .email("booker-bookings@test.ru")
+                .build());
+
+        ItemDto item = itemService.addItem(ItemDto.builder()
+                .name("Вещь с бронированиями")
+                .description("Тест")
+                .available(true)
+                .build(), owner.getId());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        BookingResponseDto pastBooking = bookingService.create(booker.getId(), BookingRequestDto.builder()
+                .itemId(item.getId())
+                .start(now.minusDays(5))
+                .end(now.minusDays(3))
+                .build());
+        bookingService.approve(owner.getId(), pastBooking.getId(), true);
+
+        BookingResponseDto futureBooking = bookingService.create(booker.getId(), BookingRequestDto.builder()
+                .itemId(item.getId())
+                .start(now.plusDays(2))
+                .end(now.plusDays(3))
+                .build());
+        bookingService.approve(owner.getId(), futureBooking.getId(), true);
+
+        ItemDto full = itemService.getItemByIdWithBookings(owner.getId(), item.getId());
+
+        assertThat(full.getLastBooking()).isNotNull();
+        assertThat(full.getNextBooking()).isNotNull();
+
+        BookingItemDto last = (BookingItemDto) full.getLastBooking();
+        BookingItemDto next = (BookingItemDto) full.getNextBooking();
+
+        assertThat(last.getId()).isEqualTo(pastBooking.getId());
+        assertThat(next.getId()).isEqualTo(futureBooking.getId());
     }
 }

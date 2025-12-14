@@ -222,12 +222,12 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private BookingItemDto toBookingItemDto(Booking b) {
+    private BookingItemDto toBookingItemDto(Booking booking) {
         return BookingItemDto.builder()
-                .id(b.getId())
-                .bookerId(b.getBooker().getId())
-                .start(b.getStartDate())
-                .end(b.getEndDate())
+                .id(booking.getId())
+                .bookerId(booking.getBooker().getId())
+                .start(booking.getStartDate())
+                .end(booking.getEndDate())
                 .build();
     }
 }
